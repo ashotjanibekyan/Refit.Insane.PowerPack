@@ -3,53 +3,46 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Akavache;
 
-namespace Refit.Insane.PowerPack.Caching.Internal
+namespace Refit.Insane.PowerPack.Caching.Internal;
+
+public class AkavachePersistedCache : IPersistedCache
 {
-    public class AkavachePersistedCache : IPersistedCache
+    public async Task<DateTimeOffset?> GetSavedAtTime(RefitCacheLocation cacheLocation, string atKey)
     {
-        public AkavachePersistedCache()
-        {
-        }
+        return await GetBlobCache(cacheLocation).GetCreatedAt(atKey);
+    }
 
-        public async Task<DateTimeOffset?> GetSavedAtTime(RefitCacheLocation cacheLocation, string atKey)
-        {
-            return await GetBlobCache(cacheLocation).GetCreatedAt(atKey);
-        }
+    public async Task Delete(RefitCacheLocation refitCacheLocation, string cachedValueAtKey)
+    {
+        await GetBlobCache(refitCacheLocation).Invalidate(cachedValueAtKey);
+    }
 
-        private IBlobCache GetBlobCache(RefitCacheLocation refitCacheLocation)
-        {
-            switch (refitCacheLocation)
-            {
-                case RefitCacheLocation.Local:
-                    return BlobCache.LocalMachine;
-                case RefitCacheLocation.Secure:
-                    return BlobCache.Secure;
-                case RefitCacheLocation.InMemory:
-                    return BlobCache.InMemory;
-                case RefitCacheLocation.UserAccount:
-                    return BlobCache.UserAccount;
-                default:
-                    return BlobCache.LocalMachine;
-            }
-        }
+    public async Task<TResult> Get<TResult>(RefitCacheLocation refitCacheLocation, string atKey)
+    {
+        return await GetBlobCache(refitCacheLocation).GetObject<TResult>(atKey).Catch(Observable.Return(default(TResult)));
+    }
 
-        public async Task Delete(RefitCacheLocation refitCacheLocation, string cachedValueAtKey)
+    public async Task Save<T>(RefitCacheLocation refitCacheLocation, string atKey, T valueToCache, TimeSpan? timeToLive)
+    {
+        if (timeToLive.HasValue)
         {
-            await GetBlobCache(refitCacheLocation).Invalidate(cachedValueAtKey);
+            await GetBlobCache(refitCacheLocation).InsertObject(atKey, valueToCache, timeToLive.Value);
         }
-
-        public async Task<TResult> Get<TResult>(RefitCacheLocation refitCacheLocation, string atKey)
+        else
         {
-            return await GetBlobCache(refitCacheLocation).GetObject<TResult>(atKey).Catch(Observable.Return(default(TResult)));
+            await GetBlobCache(refitCacheLocation).InsertObject(atKey, valueToCache);
         }
+    }
 
-        public async Task Save<T>(RefitCacheLocation refitCacheLocation, string atKey, T valueToCache, TimeSpan? timeToLive)
+    private IBlobCache GetBlobCache(RefitCacheLocation refitCacheLocation)
+    {
+        return refitCacheLocation switch
         {
-            if (timeToLive.HasValue)
-                await GetBlobCache(refitCacheLocation).InsertObject(atKey, valueToCache, timeToLive.Value);
-            else
-                await GetBlobCache(refitCacheLocation).InsertObject(atKey, valueToCache);
-        }
-
+            RefitCacheLocation.Local => BlobCache.LocalMachine,
+            RefitCacheLocation.Secure => BlobCache.Secure,
+            RefitCacheLocation.InMemory => BlobCache.InMemory,
+            RefitCacheLocation.UserAccount => BlobCache.UserAccount,
+            _ => BlobCache.LocalMachine
+        };
     }
 }

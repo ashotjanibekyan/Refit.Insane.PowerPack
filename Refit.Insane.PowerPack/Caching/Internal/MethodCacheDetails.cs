@@ -1,30 +1,26 @@
 ﻿using System;
 using System.Reflection;
 
-namespace Refit.Insane.PowerPack.Caching.Internal
+namespace Refit.Insane.PowerPack.Caching.Internal;
+
+internal class MethodCacheDetails(Type apiInterfaceType, MethodInfo methodInfo)
 {
-    class MethodCacheDetails
-	{
-		public MethodCacheDetails(Type apiInterfaceType, MethodInfo methodInfo)
-		{
-			ApiInterfaceType = apiInterfaceType;
-			MethodInfo = methodInfo;
-		}
+    public Type ApiInterfaceType { get; } = apiInterfaceType;
 
-		public Type ApiInterfaceType { get; }
+    public MethodInfo MethodInfo { get; } = methodInfo;
 
-		public MethodInfo MethodInfo { get; }
+    public RefitCacheAttribute CacheAttribute { get; internal set; }
 
-		public RefitCacheAttribute CacheAttribute { get; internal set; }
+    public override int GetHashCode()
+    {
+        return ApiInterfaceType.GetHashCode() * 23 * MethodInfo.GetHashCode() * 23 * 29;
+    }
 
-		public override int GetHashCode() => ApiInterfaceType.GetHashCode() * 23 * MethodInfo.GetHashCode() * 23 * 29;
-
-		public override bool Equals(object obj)
-		{
-			var other = obj as MethodCacheDetails;
-			return other != null &&
-				   other.ApiInterfaceType.Equals(ApiInterfaceType) &&
-				   other.MethodInfo.Equals(MethodInfo);
-		}
-	}
+    public override bool Equals(object obj)
+    {
+        var other = obj as MethodCacheDetails;
+        return other != null &&
+               other.ApiInterfaceType == ApiInterfaceType &&
+               other.MethodInfo.Equals(MethodInfo);
+    }
 }

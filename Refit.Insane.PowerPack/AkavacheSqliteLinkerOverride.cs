@@ -3,19 +3,17 @@ using Akavache.Sqlite3;
 
 // Note: This class file is *required* for iOS to work correctly, and is 
 // also a good idea for Android if you enable "Link All Assemblies".
-namespace Refit.Insane.PowerPack
+namespace Refit.Insane.PowerPack;
+
+[Preserve]
+public static class LinkerPreserve
 {
-    [Preserve]
-    public static class LinkerPreserve
+    static LinkerPreserve()
     {
-        static LinkerPreserve()
-        {
-            throw new Exception(typeof(SQLitePersistentBlobCache).FullName);
-        }
+        throw new Exception(typeof(SQLitePersistentBlobCache).FullName);
     }
+}
 
-
-    public class PreserveAttribute : Attribute
-    {
-    }
+public class PreserveAttribute : Attribute
+{
 }

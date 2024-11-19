@@ -1,15 +1,14 @@
 ﻿using Refit.Insane.PowerPack.Caching;
 
-namespace Refit.Insane.PowerPack.Tests
+namespace Refit.Insane.PowerPack.Tests;
+
+public interface ICacheRestMockApi
 {
-    public interface ICacheRestMockApi
-    {
-        Task<IEnumerable<string>> CreateNewItem(string itemId);
+    Task<IEnumerable<string>> CreateNewItem(string itemId);
 
-        [RefitCache]
-        Task<IEnumerable<string>> GetItems();
+    [RefitCache]
+    Task<IEnumerable<string>> GetItems();
 
-        [RefitCache]
-        Task<IEnumerable<string>> GetItems([RefitCachePrimaryKey] string primaryKeyItemId);
-    }
+    [RefitCache]
+    Task<IEnumerable<string>> GetItems([RefitCachePrimaryKey] string primaryKeyItemId);
 }
